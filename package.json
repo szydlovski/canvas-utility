@@ -1,0 +1,25 @@
+{
+  "name": "canvas-utility",
+  "version": "1.0.0",
+  "description": "simple canvas 2d utility - trimming, rotating, resizing",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c",
+    "dev": "rollup -c --watch"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Kamil Szydlovski",
+    "email": "kamil.szydlovski@gmail.com",
+    "url": "http://szydlovski.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^11.0.1",
+    "rollup": "^2.35.1"
+  },
+  "dependencies": {
+    "@szydlovski/geometry": "^0.2.0"
+  }
+}
