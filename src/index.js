@@ -5,3 +5,4 @@ export { copyCanvas } from './api/copyCanvas.js';
 export { cropCanvas } from './api/cropCanvas.js';
 export { trimCanvas } from './api/trimCanvas.js';
 export { rotateCanvas } from './api/rotateCanvas.js';
+export { flipCanvas } from './api/flipCanvas.js';

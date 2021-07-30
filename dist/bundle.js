@@ -475,4 +475,12 @@ function rotateCanvas(canvas, angle) {
 	});
 }
 
-export { copyCanvas, createCanvas$2 as createCanvas, cropCanvas, loadImage$1 as loadImage, resizeCanvas, rotateCanvas, setCanvasImplementation, trimCanvas };
+function flipCanvas(canvas) {
+	return createCanvas$2(canvas, (ctx) => {
+		ctx.translate(canvas.width, 0);
+		ctx.scale(-1, 1);
+		ctx.drawImage(canvas, 0, 0);
+	});
+}
+
+export { copyCanvas, createCanvas$2 as createCanvas, cropCanvas, flipCanvas, loadImage$1 as loadImage, resizeCanvas, rotateCanvas, setCanvasImplementation, trimCanvas };
