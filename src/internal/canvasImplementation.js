@@ -1,12 +1,11 @@
 import * as browserCanvas from './browserCanvas.js';
 
-var createCanvas = browserCanvas.createCanvas;
-var loadImage = browserCanvas.loadImage;
-var createImageData = browserCanvas.createImageData;
+var createCanvas, canvasConstructor, loadImage, createImageData;
+setCanvasImplementation(browserCanvas);
 
 export function setCanvasImplementation(newImplementation) {
 	// TODO - maybe some validation
-	({ createCanvas, loadImage, createImageData } = newImplementation);
+	({ createCanvas, canvasConstructor, loadImage, createImageData } = newImplementation);
 }
 
-export { createCanvas, loadImage, createImageData };
+export { createCanvas, canvasConstructor, loadImage, createImageData };

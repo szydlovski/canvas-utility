@@ -13,3 +13,5 @@ export function createCanvas(width, height) {
 export function createImageData(...args) {
   return new ImageData(...args);
 }
+
+export const canvasConstructor = HTMLCanvasElement;

@@ -14,13 +14,22 @@ function createImageData(...args) {
   return new ImageData(...args);
 }
 
-var createCanvas$1 = createCanvas;
-var loadImage$1 = loadImage;
-var createImageData$1 = createImageData;
+const canvasConstructor = HTMLCanvasElement;
+
+var browserCanvas = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	loadImage: loadImage,
+	createCanvas: createCanvas,
+	createImageData: createImageData,
+	canvasConstructor: canvasConstructor
+});
+
+var createCanvas$1, canvasConstructor$1, loadImage$1, createImageData$1;
+setCanvasImplementation(browserCanvas);
 
 function setCanvasImplementation(newImplementation) {
 	// TODO - maybe some validation
-	({ createCanvas: createCanvas$1, loadImage: loadImage$1, createImageData: createImageData$1 } = newImplementation);
+	({ createCanvas: createCanvas$1, canvasConstructor: canvasConstructor$1, loadImage: loadImage$1, createImageData: createImageData$1 } = newImplementation);
 }
 
 const isInteger = (...values) =>
@@ -483,4 +492,273 @@ function flipCanvas(canvas) {
 	});
 }
 
-export { copyCanvas, createCanvas$2 as createCanvas, cropCanvas, flipCanvas, loadImage$1 as loadImage, resizeCanvas, rotateCanvas, setCanvasImplementation, trimCanvas };
+function getImageData(
+	canvas,
+	x = 0,
+	y = 0,
+	width = canvas.width,
+	height = canvas.height
+) {
+	const targetCanvas =
+		canvas instanceof canvasConstructor$1 ? canvas : copyCanvas(canvas);
+	const ctx = targetCanvas.getContext('2d');
+	return ctx.getImageData(x, y, width, height);
+}
+
+class ImageDataHandle {
+	#rawImageData;
+	constructor(rawImageData) {
+		this.#rawImageData = rawImageData;
+	}
+	get raw() {
+		return this.#rawImageData;
+	}
+	get data() {
+		return this.raw.data;
+	}
+	get width() {
+		return this.raw.width;
+	}
+	get height() {
+		return this.raw.width;
+	}
+	_position(x, y) {
+		return y * this.width * 4 + x * 4;
+	}
+	pixelAt(x, y) {
+		const start = y * this.width * 4 + x * 4;
+		return this.data.slice(start, start + 4);
+	}
+	componentAt(x, y, component = 'r') {
+		const base = y * this.width * 4 + x * 4;
+		switch (component) {
+			case 'r':
+				return this.data[base];
+			case 'g':
+				return this.data[base + 1];
+			case 'b':
+				return this.data[base + 2];
+			case 'a':
+				return this.data[base + 3];
+			default:
+				throw new Error(`Invalid RGBA component "${component}"`);
+		}
+	}
+	isTransparentAt(x, y) {
+		return this.componentAt(x, y, 'a') < 255;
+	}
+	isOpaqueAt(x, y) {
+		return this.componentAt(x, y, 'a') > 0;
+	}
+	hasNeighbor(x, y, predicate) {
+		for (let oy = -1; oy <= 1; oy++) {
+			for (let ox = -1; ox <= 1; ox++) {
+				if (predicate(this.pixelAt(x + ox, y + oy))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	hasTransparentNeighbor(x, y) {
+		return this.hasNeighbor(x, y, ([, , , a]) => a > 0);
+	}
+	forEachPixel(callback) {
+		for (let y = 0; y < this.height; y++) {
+			for (let x = 0; x < this.width; x++) {
+				const position = [y * this.width * 4 + x * 4];
+				const pixel = this.data.slice(position, position + 4);
+				callback(pixel, x, y, position);
+			}
+		}
+	}
+	forEachCoordinate(callback) {
+		for (let y = 0; y < this.height; y++) {
+			for (let x = 0; x < this.width; x++) {
+				callback(x, y);
+			}
+		}
+	}
+	mapPixels(callback) {
+		const data = new Uint8ClampedArray(this.data.length);
+		for (let y = 0; y < this.height; y++) {
+			for (let x = 0; x < this.width; x++) {
+				const position = y * this.width * 4 + x * 4;
+				const pixel = this.data.slice(position, position + 4);
+				const newPixel = callback(pixel, x, y, position);
+				for (let i = 0; i <= 3; i++) {
+					data[position + i] = newPixel[i];
+				}
+			}
+		}
+		return data;
+	}
+	static fromImage(image, width = image.width, height = image.height) {
+		return new ImageDataHandle(
+			getImageData(
+				createCanvas$2({ width, height }, (ctx) =>
+					ctx.drawImage(image, 0, 0, width, height)
+				)
+			)
+		);
+	}
+}
+
+function adjustCanvas(canvas, adjustment) {
+	return createCanvas$2(canvas, (ctx) => {
+    const imageData = ImageDataHandle.fromImage(canvas);
+    const adjustedImageData = createImageData$1(imageData.mapPixels(adjustment), canvas.width);
+    ctx.putImageData(adjustedImageData, 0, 0);
+  });
+}
+
+const createCirclePath = (ctx, x, y, radius) => {
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+};
+
+const fillCircle = (ctx, x, y, radius) => {
+	createCirclePath(ctx, x, y, radius);
+	ctx.fill();
+};
+
+const strokeCircle = (ctx, x, y, radius) => {
+	createCirclePath(ctx, x, y, radius);
+	ctx.stroke();
+};
+
+const createPolygonPath = (ctx, points) => {
+	const firstPoint = points.shift();
+	ctx.beginPath();
+	ctx.moveTo(firstPoint.x, firstPoint.y);
+	let currentPoint;
+	while (points.length > 0) {
+		currentPoint = points.shift();
+		ctx.lineTo(currentPoint.x, currentPoint.y);
+	}
+};
+
+const fillPolygon = (ctx, [...points]) => {
+  createPolygonPath(ctx, points);
+  ctx.fill();
+};
+
+const strokePolygon = (ctx, [...points]) => {
+  createPolygonPath(ctx, points);
+  ctx.stroke();
+};
+
+const fillImage = (ctx, image, x, y, width, height) =>
+	ctx.drawImage(
+		createCanvas$2(ctx.canvas, (tempCtx) => {
+			tempCtx.fillStyle = ctx.fillStyle;
+			tempCtx.drawImage(image, x, y, width, height);
+			tempCtx.globalCompositeOperation = 'source-atop';
+			tempCtx.fillRect(x, y, width, height);
+		}),
+		0,
+		0
+	);
+
+const strokeImage = (
+	ctx,
+	image,
+	radius = 1,
+	targetX = 0,
+	targetY = 0,
+	width = image.width,
+	height = image.height
+) => {
+  ctx.save();
+  ctx.fillStyle = ctx.strokeStyle;
+  const imageData = ImageDataHandle.fromImage(image, width, height);
+  imageData.forEachCoordinate((x, y) => {
+    if (imageData.componentAt(x, y, 'a') === 0) return;
+    if (imageData.hasNeighbor(x, y, ([, , , a]) => a < 255)) {
+      fillCircle(
+        ctx,
+        targetX + x + 0.5,
+        targetY + y + 0.5,
+        radius - 0.5
+      );
+    }
+  });
+  ctx.restore();
+};
+
+class Canvas {
+	#canvas;
+	constructor(canvas) {
+		this.#canvas = canvas;
+	}
+	get canvas() {
+		return this.#canvas;
+	}
+	get ctx() {
+		return this.canvas.getContext('2d');
+	}
+	draw(draw) {
+		draw(this.ctx, this.canvas);
+		return this;
+	}
+	copy() {
+		return new Canvas(copyCanvas(this.canvas));
+	}
+	crop(ratio = '1:1') {
+		this.#canvas = cropCanvas(this.canvas, ratio);
+		return this;
+	}
+	resize(options = {}) {
+		this.#canvas = resizeCanvas(this.canvas, options);
+		return this;
+	}
+	trim() {
+		this.#canvas = trimCanvas(this.canvas);
+		return this;
+	}
+	rotate(angle) {
+		this.#canvas = rotateCanvas(this.canvas, angle);
+		return this;
+	}
+	adjust(adjustment) {
+		this.#canvas = adjustCanvas(this.canvas, adjustment);
+		return this;
+	}
+	grayscale() {
+		return this.adjust(([r, g, b, a]) => {
+			const grayscale = 0.299 * r + 0.587 * g + 0.114 * b;
+			return [grayscale, grayscale, grayscale, a];
+		});
+	}
+	sepia() {
+		return this.adjust(([r, g, b, a]) => {
+			return [
+				0.393 * r + 0.769 * g + 0.189 * b,
+				0.349 * r + 0.686 * g + 0.168 * b,
+				0.272 * r + 0.534 * g + 0.131 * b,
+				a,
+			];
+		});
+	}
+	getImageData() {
+		return getImageData(this.#canvas);
+	}
+	toElement() {
+		return this.canvas;
+	}
+	toCanvas() {
+		return this.canvas;
+	}
+	static fromCopy(canvas) {
+		return new Canvas(copyCanvas(canvas));
+	}
+	static fromImage(image) {
+		return Canvas.fromCopy(image);
+	}
+	static create(dimensions) {
+		return new Canvas(createCanvas$2(dimensions));
+	}
+}
+
+export { Canvas, ImageDataHandle, adjustCanvas, copyCanvas, createCanvas$2 as createCanvas, cropCanvas, fillCircle, fillImage, fillPolygon, flipCanvas, getImageData, loadImage$1 as loadImage, resizeCanvas, rotateCanvas, setCanvasImplementation, strokeCircle, strokeImage, strokePolygon, trimCanvas };
+//# sourceMappingURL=bundle.js.map

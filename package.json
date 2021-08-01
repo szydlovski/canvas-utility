@@ -1,6 +1,6 @@
 {
   "name": "@szydlovski/canvas-utility",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "simple canvas 2d utility - trimming, rotating, resizing",
   "main": "dist/bundle.js",
   "scripts": {
