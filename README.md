@@ -54,6 +54,10 @@ const resizeAndCropPreviewImage = (image) =>
 
 # Changelog
 
+## [2.0.0] - 2021-08-01
+
+Full TypeScript rewrite.
+
 ## [1.2.0] - 2021-08-01
 
 ### Added
