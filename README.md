@@ -141,7 +141,7 @@ const result = Canvas.fromImage(img)
 
 # Changelog
 
-## [2.0.0] - 2021-08-01
+## [2.0.0] - 2021-08-09
 
 Full TypeScript rewrite.
 
