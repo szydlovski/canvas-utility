@@ -52,6 +52,23 @@ const resizeAndCropPreviewImage = (image) =>
 		.toElement();
 ```
 
+# API
+
+## Types
+
+- Drawable - `HTMLImageElement | HTMLCanvasElement | OffscreenCanvas`
+- Dimensions - `{ width: number, height: number }`
+- DimensionsSource - `Dimensions | [number, number] | number`
+- DrawCallback - `(ctx: CanvasRenderingContext2d) => void`
+
+## `createCanvas(dimensions: DimensionsSource, callback?: DrawCallback): HTMLCanvasElement`
+
+Creates a new canvas using the provided `dimensions`, which can be an object with `width` and `height` properties, a `[width, height]` tuple or a single `number` (in which case it will be used for both width and height). Optionally, you can provide a callback which can be used to draw on the newly created canvas.
+
+## `copyCanvas(canvas: Drawable): HTMLCanvasElement`
+
+Creates a copy of the provided `Drawable` by drawing it on a new, identically sized canvas.
+
 # Changelog
 
 ## [2.0.0] - 2021-08-01
