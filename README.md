@@ -52,22 +52,92 @@ const resizeAndCropPreviewImage = (image) =>
 		.toElement();
 ```
 
-# API
+# Functional API
+
+The functional API allows non-destructive, immutable operations on the canvas. Note that in addition to canvases, all the functions accept images and offscreen canvases.
 
 ## Types
 
 - Drawable - `HTMLImageElement | HTMLCanvasElement | OffscreenCanvas`
 - Dimensions - `{ width: number, height: number }`
-- DimensionsSource - `Dimensions | [number, number] | number`
+- DimensionsSource - `Dimensions | [number, number] | number` - an object with `width` and `height` properties, a `[width, height]` tuple or a single `number` (in which case it will be used for both width and height)
 - DrawCallback - `(ctx: CanvasRenderingContext2d) => void`
 
-## `createCanvas(dimensions: DimensionsSource, callback?: DrawCallback): HTMLCanvasElement`
+## `createCanvas(source, callback)`
 
-Creates a new canvas using the provided `dimensions`, which can be an object with `width` and `height` properties, a `[width, height]` tuple or a single `number` (in which case it will be used for both width and height). Optionally, you can provide a callback which can be used to draw on the newly created canvas.
+Arguments:
+- source - `DimensionsSource` - used to determine dimensions for the created canvas
+- callback - `DrawCallback` - optional, allows you to immediately draw on the created canvas
 
-## `copyCanvas(canvas: Drawable): HTMLCanvasElement`
+Returns: `HTMLCanvasElement`, the newly created canvas
+___
+
+Creates a new canvas using the provided `dimensions`. Optionally, you can provide a callback which can be used to draw on the newly created canvas.
+
+Example useage:
+
+```js
+const c1 = createCanvas(500) // a 500 by 500 canvas
+const c2 = createCanvas([200,400]) // a 200 by 400 canvas
+const c3 = createCanvas({ width: 800, height: 1600 }) // a 800 by 1600 canvas
+const c4 = createCanvas(c2) // a 200 by 400 canvas
+const c5 = createCanvas(c3, ctx => ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)); // a 800 by 1600 canvas, filled with black pixels
+```
+
+## `copyCanvas(canvas)`
+
+Arguments:
+- canvas - `Drawable` - the entity to be copied
+
+Returns: `HTMLCanvasElement`, a canvas with the copied entity
+
+___
 
 Creates a copy of the provided `Drawable` by drawing it on a new, identically sized canvas.
+
+Example usage:
+
+```js
+const blackRect = createCanvas(c3, ctx => ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height));
+const blackRectCopy = copyCanvas(blackRect);
+console.log(blackRect !== blackRectCopy); // true
+```
+
+## `trimCanvas(canvas)`
+
+Arguments:
+- canvas - `Drawable` - the entity to be trimmed
+
+Returns: `HTMLCanvasElement`, a canvas with the trimmed entity
+___
+
+Trims the provided `Drawable` by copying its contents to a new canvas and removing empty lines of pixels.
+
+Example usage:
+
+```js
+const imgToTrim = createCanvas(500, ctx => ctx.fillRect(100, 100, 300, 300));
+const trimmedImg = trimCanvas(imgToTrim);
+console.log(trimmedImg.width); // 300
+console.log(trimmedImg.height); // 300
+```
+
+# Chainable Wrapper API
+
+The entire functional API is also available in a convenient, chainable wrapper, exported as `Canvas`, with methods named the same as the functional operations but without the `Canvas` suffix (i.e. `rotateCanvas` becomes `Canvas.rotate`).
+
+Example usage:
+
+```js
+const img = await loadImage('path/to/image.png');
+const result = Canvas.fromImage(img)
+	.trim()
+	.resize({ width: 500 })
+	.crop('1:1')
+	.rotate(45)
+	.grayscale()
+	.toElement(); // returns a canvas element
+```
 
 # Changelog
 
