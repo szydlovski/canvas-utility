@@ -1,9 +1,13 @@
 import { createCanvas } from '../canvas-ops/createCanvas';
 import { getImageData } from '../canvas-ops/getImageData';
+import { Drawable } from '../types';
+
+type RGBAPixel = [number, number, number, number];
+type RGBAComponent = 'r' | 'g' | 'b' | 'a';
 
 export class ImageDataHandle {
 	#rawImageData;
-	constructor(rawImageData) {
+	constructor(rawImageData: ImageData) {
 		this.#rawImageData = rawImageData;
 	}
 	get raw() {
@@ -18,35 +22,39 @@ export class ImageDataHandle {
 	get height() {
 		return this.raw.width;
 	}
-	_position(x, y) {
+	_position(x: number, y: number) {
 		return y * this.width * 4 + x * 4;
 	}
-	pixelAt(x, y) {
+	pixelAt(x: number, y: number): RGBAPixel {
+		if ([x, y].some((n) => n < 0) || x >= this.width || y >= this.height) {
+			return [0,0,0,0];
+		}
 		const start = y * this.width * 4 + x * 4;
-		return this.data.slice(start, start + 4);
+		const [r,g,b,a] = this.data.slice(start, start + 4);
+		return [r,g,b,a];
 	}
-	componentAt(x, y, component = 'r') {
-		const base = y * this.width * 4 + x * 4;
+	componentAt(x: number, y: number, component: RGBAComponent = 'r') {
+		const pixel = this.pixelAt(x, y);
 		switch (component) {
 			case 'r':
-				return this.data[base];
+				return pixel[0];
 			case 'g':
-				return this.data[base + 1];
+				return pixel[1];
 			case 'b':
-				return this.data[base + 2];
+				return pixel[2];
 			case 'a':
-				return this.data[base + 3];
+				return pixel[3];
 			default:
 				throw new Error(`Invalid RGBA component "${component}"`);
 		}
 	}
-	isTransparentAt(x, y) {
+	isTransparentAt(x: number, y: number) {
 		return this.componentAt(x, y, 'a') < 255;
 	}
-	isOpaqueAt(x, y) {
+	isOpaqueAt(x: number, y: number) {
 		return this.componentAt(x, y, 'a') > 0;
 	}
-	hasNeighbor(x, y, predicate) {
+	hasNeighbor(x: number, y: number, predicate: (neighbor: RGBAPixel) => boolean) {
 		for (let oy = -1; oy <= 1; oy++) {
 			for (let ox = -1; ox <= 1; ox++) {
 				if (predicate(this.pixelAt(x + ox, y + oy))) {
@@ -56,32 +64,32 @@ export class ImageDataHandle {
 		}
 		return false;
 	}
-	hasTransparentNeighbor(x, y) {
-		return this.hasNeighbor(x, y, ([, , , a]) => a > 0);
+	hasTransparentNeighbor(x: number, y: number) {
+		return this.hasNeighbor(x, y, ([, , , a]: RGBAPixel) => a > 0);
 	}
-	forEachPixel(callback) {
+	forEachPixel(callback: (pixel: RGBAPixel, x: number, y: number, position: number) => void) {
 		for (let y = 0; y < this.height; y++) {
 			for (let x = 0; x < this.width; x++) {
-				const position = [y * this.width * 4 + x * 4];
-				const pixel = this.data.slice(position, position + 4);
-				callback(pixel, x, y, position);
+				const position = y * this.width * 4 + x * 4;
+				const [r,g,b,a] = this.data.slice(position, position + 4);
+				callback([r,g,b,a], x, y, position);
 			}
 		}
 	}
-	forEachCoordinate(callback) {
+	forEachCoordinate(callback: (x: number, y: number) => void) {
 		for (let y = 0; y < this.height; y++) {
 			for (let x = 0; x < this.width; x++) {
 				callback(x, y);
 			}
 		}
 	}
-	mapPixels(callback) {
+	mapPixels(callback: (pixel: RGBAPixel, x: number, y: number, position: number) => RGBAPixel) {
 		const data = new Uint8ClampedArray(this.data.length);
 		for (let y = 0; y < this.height; y++) {
 			for (let x = 0; x < this.width; x++) {
 				const position = y * this.width * 4 + x * 4;
-				const pixel = this.data.slice(position, position + 4);
-				const newPixel = callback(pixel, x, y, position);
+				const [r,g,b,a] = this.data.slice(position, position + 4);
+				const newPixel = callback([r,g,b,a], x, y, position);
 				for (let i = 0; i <= 3; i++) {
 					data[position + i] = newPixel[i];
 				}
@@ -89,7 +97,7 @@ export class ImageDataHandle {
 		}
 		return data;
 	}
-	static fromImage(image, width = image.width, height = image.height) {
+	static fromImage(image: Drawable, width = image.width, height = image.height) {
 		return new ImageDataHandle(
 			getImageData(
 				createCanvas({ width, height }, (ctx) =>

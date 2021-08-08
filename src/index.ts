@@ -1,6 +1,5 @@
 export {
-	loadImage,
-	setCanvasImplementation,
+	loadImage
 } from './internal/canvasImplementation.js';
 export { createCanvas } from './canvas-ops/createCanvas.js';
 export { resizeCanvas } from './canvas-ops/resizeCanvas.js';
@@ -10,6 +9,7 @@ export { trimCanvas } from './canvas-ops/trimCanvas.js';
 export { rotateCanvas } from './canvas-ops/rotateCanvas.js';
 export { flipCanvas } from './canvas-ops/flipCanvas.js';
 export { adjustCanvas } from './canvas-ops/adjustCanvas.js';
+export { maskCanvas } from './canvas-ops/maskCanvas.js';
 export { getImageData } from './canvas-ops/getImageData.js';
 export * from './draw-ops/circle.js';
 export * from './draw-ops/polygon.js';

@@ -1,12 +1,13 @@
 import { createCanvas } from './createCanvas.js';
 import { parseRatio } from '../internal/helpers.js';
+import { Drawable, Ratio } from '../types.js';
 
-export function cropCanvas(source, ratio = '1:1') {
+export function cropCanvas(source: Drawable, ratio: Ratio = '1:1') {
 	// extract numbers from ratio string
 	const [widthRatio, heightRatio] = parseRatio(ratio);
 	const { width: sourceWidth, height: sourceHeight } = source;
 
-	let targetWidth, targetHeight;
+	let targetWidth: number, targetHeight: number;
 	// wide target - source width stays, height from ratio
 	if (widthRatio > heightRatio) {
 		targetWidth = sourceWidth;

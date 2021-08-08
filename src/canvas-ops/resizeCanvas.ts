@@ -1,30 +1,31 @@
 import { createCanvas } from './createCanvas.js';
 import { clamp } from '../internal/helpers.js';
+import { Drawable } from '../types.js';
 
-export function resizeCanvas(canvas, opts = {}) {
-	const options = Object.assign(
-		{
-			width: undefined,
-			height: undefined,
-			scale: undefined,
-			steps: 1,
-		},
-		opts
-	);
+export interface ResizeCanvasOptions {
+	width?: number;
+	height?: number;
+	scale?: number;
+	steps?: number;
+}
+
+// TODO: Look into the undefined/! thing
+
+export function resizeCanvas(canvas: Drawable, options: ResizeCanvasOptions = {}) {
 	const { width: sourceWidth, height: sourceHeight } = canvas;
-	let { width: targetWidth, height: targetHeight, scale, steps } = options;
+	let { width: targetWidth, height: targetHeight, scale, steps = 1 }: ResizeCanvasOptions = options;
 	steps = clamp(steps, 1, 10);
 
 	// explicitly set width and/or height take precedence over scale
 	if (targetWidth !== undefined || targetHeight !== undefined) {
 		// explicitly set width and height take precedence over ratio
-		// only calculate from ratio if either is undefined
 		if (targetWidth === undefined || targetHeight === undefined) {
-			// no width - calculate from ratio
-			if (targetWidth === undefined) {
+			// only calculate from ratio if either is undefined
+			if (targetWidth === undefined && targetHeight !== undefined) {
+				// no width - calculate from ratio
 				targetWidth = Math.round((sourceWidth / sourceHeight) * targetHeight);
+			} else if (targetWidth !== undefined && targetHeight === undefined) {
 				// no height - calculate from ratio
-			} else {
 				targetHeight = Math.round((sourceHeight / sourceWidth) * targetWidth);
 			}
 		}
@@ -38,12 +39,13 @@ export function resizeCanvas(canvas, opts = {}) {
 	// use source dimensions
 	// effectively copies the source
 	else {
-		({ targetWidth, targetHeight } = source);
+		const { width, height } = canvas;
+		[targetWidth, targetHeight] = [width, height];
 	}
 
 	// calculate the amount by which to change dimensions with each step
-	const widthStep = Math.round((targetWidth - sourceWidth) / steps);
-	const heightStep = Math.round((targetHeight - sourceHeight) / steps);
+	const widthStep = Math.round((targetWidth! - sourceWidth) / steps);
+	const heightStep = Math.round((targetHeight! - sourceHeight) / steps);
 
 	let render = canvas;
 
@@ -54,13 +56,13 @@ export function resizeCanvas(canvas, opts = {}) {
 		// due to rounding, the sum of steps may not be the same as the target dimensions
 		// if it's the last step, just use the target dimensions
 		if (currentStep === steps) {
-			currentWidth = targetWidth;
-			currentHeight = targetHeight;
+			currentWidth = targetWidth!;
+			currentHeight = targetHeight!;
 		}
 		render = createCanvas([currentWidth, currentHeight], (ctx) =>
 			ctx.drawImage(render, 0, 0, currentWidth, currentHeight)
 		);
 	}
 
-	return render;
+	return render as HTMLCanvasElement;
 }

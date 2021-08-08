@@ -51,6 +51,12 @@ const resizeAndCropPreviewImage = (image) =>
 
 # Changelog
 
+## [1.2.0] - 2021-08-01
+
+### Added
+
+- `maskCanvas`
+
 ## [1.1.0] - 2021-08-01
 
 ### Added

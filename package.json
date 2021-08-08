@@ -1,11 +1,10 @@
 {
   "name": "@szydlovski/canvas-utility",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "simple canvas 2d utility - trimming, rotating, resizing",
-  "main": "dist/bundle.js",
+  "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c",
+    "build": "tsc",
     "dev": "rollup -c --watch"
   },
   "keywords": [],
@@ -17,7 +16,10 @@
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^11.0.1",
-    "rollup": "^2.35.1"
+    "@rollup/plugin-typescript": "^8.2.5",
+    "rollup": "^2.35.1",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
     "@szydlovski/geometry": "^0.2.0"
