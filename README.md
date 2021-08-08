@@ -35,7 +35,7 @@ import { flipCanvas, cropCanvas, resizeCanvas, loadImage } from '@szydlovski/can
 ```
 This will result in a random image, resized to a width of 500 pixels (height will be calculated from the image's aspect ratio), cropped to 16:9 and flipped horizontally.
 
-The functions can be neatly composed to quickly 
+The functions can be neatly composed to create utilities:
 
 ```js
 import { cropCanvas, resizeCanvas } from '@szydlovski/canvas-utility';
@@ -46,7 +46,10 @@ const resizeAndCropPreviewImage = (image) =>
 
 import { Canvas } from '@szydlovski/canvas-utility';
 const resizeAndCropPreviewImage = (image) =>
-	Canvas.fromImage(image).crop('1:1').resize({ width: 250 }).toElement();
+	Canvas.fromImage(image)
+		.crop('1:1')
+		.resize({ width: 250 })
+		.toElement();
 ```
 
 # Changelog
