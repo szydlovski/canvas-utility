@@ -1,9 +1,8 @@
 import { createCanvas } from '../canvas-ops/createCanvas';
 import { getImageData } from '../canvas-ops/getImageData';
-import { Drawable } from '../types';
+import { Drawable, PixelWithOrWithoutAlpha, RGBAComponent, RGBAPixel } from '../types';
 
-type RGBAPixel = [number, number, number, number];
-type RGBAComponent = 'r' | 'g' | 'b' | 'a';
+
 
 export class ImageDataHandle {
 	#rawImageData;
@@ -20,7 +19,21 @@ export class ImageDataHandle {
 		return this.raw.width;
 	}
 	get height() {
-		return this.raw.width;
+		return this.raw.height;
+	}
+	extractPixels<T extends boolean>(alpha: T): PixelWithOrWithoutAlpha<T>[] {
+		return this.mapEachPixel(([r,g,b,a]) => alpha ? [r,g,b,a] : [r,g,b]) as PixelWithOrWithoutAlpha<T>[];
+	}
+	mapEachPixel<T>(callback: (pixel: RGBAPixel) => T): T[] {
+		const mapped: T[] = [];
+		for (let y = 0; y < this.height; y++) {
+			for (let x = 0; x < this.width; x++) {
+				const position = y * this.width * 4 + x * 4;
+				const [r,g,b,a] = this.data.slice(position, position + 4);
+				mapped.push(callback([r,g,b,a]));
+			}
+		}
+		return mapped;
 	}
 	_position(x: number, y: number) {
 		return y * this.width * 4 + x * 4;

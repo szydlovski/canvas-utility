@@ -141,6 +141,12 @@ const result = Canvas.fromImage(img)
 
 # Changelog
 
+## [2.1.0] - 2021-08-13
+
+### Added
+
+- `extractPixelsFromCanvas`
+
 ## [2.0.0] - 2021-08-09
 
 Full TypeScript rewrite.

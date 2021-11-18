@@ -2,8 +2,10 @@ import { createCanvas } from './createCanvas.js';
 import { parseRatio } from '../internal/helpers.js';
 import { Drawable, Ratio } from '../types.js';
 
+
+
 export function cropCanvas(source: Drawable, ratio: Ratio = '1:1') {
-	// extract numbers from ratio string
+	// extract numbers from ratio
 	const [widthRatio, heightRatio] = parseRatio(ratio);
 	const { width: sourceWidth, height: sourceHeight } = source;
 

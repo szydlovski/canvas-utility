@@ -1,6 +1,6 @@
 {
   "name": "@szydlovski/canvas-utility",
-  "version": "2.0.0",
+  "version": "2.1.2",
   "description": "simple canvas 2d utility - trimming, rotating, resizing",
   "main": "build/index.js",
   "scripts": {

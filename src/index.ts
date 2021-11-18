@@ -11,6 +11,7 @@ export { flipCanvas } from './canvas-ops/flipCanvas.js';
 export { adjustCanvas } from './canvas-ops/adjustCanvas.js';
 export { maskCanvas } from './canvas-ops/maskCanvas.js';
 export { getImageData } from './canvas-ops/getImageData.js';
+export { getPixelsFromCanvas } from './canvas-ops/getPixelsFromCanvas.js';
 export * from './draw-ops/circle.js';
 export * from './draw-ops/polygon.js';
 export * from './draw-ops/image.js';
